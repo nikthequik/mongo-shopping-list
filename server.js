@@ -9,6 +9,31 @@ var app = express();
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+var Storage = {
+  add: function(name) {
+    var item = {name: name, id: this.setId};
+    this.items.push(item);
+    this.setId += 1;
+    return item;
+  },
+  delete: function() {
+    
+  }
+};
+
+var createStorage = function() {
+  var storage = Object.create(Storage);
+  storage.items = [];
+  storage.setId = 1;
+  return storage;
+}
+
+var storage = createStorage();
+
+storage.add('Broad beans');
+storage.add('Tomatoes');
+storage.add('Peppers');
+
 var runServer = function(callback) {
     mongoose.connect(config.DATABASE_URL, function(err) {
         if (err && callback) {
@@ -65,4 +90,5 @@ app.use('*', function(req, res) {
 });
 
 exports.app = app;
+exports.storage = storage;
 exports.runServer = runServer;
