@@ -1,40 +1,14 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-
 var config = require('./config');
-
 var app = express();
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-var Storage = {
-  add: function(name) {
-    var item = {name: name, id: this.setId};
-    this.items.push(item);
-    this.setId += 1;
-    return item;
-  },
-  delete: function() {
-    
-  }
-};
-
-var createStorage = function() {
-  var storage = Object.create(Storage);
-  storage.items = [];
-  storage.setId = 1;
-  return storage;
-}
-
-var storage = createStorage();
-
-storage.add('Broad beans');
-storage.add('Tomatoes');
-storage.add('Peppers');
-
 var runServer = function(callback) {
+
     mongoose.connect(config.DATABASE_URL, function(err) {
         if (err && callback) {
             return callback(err);
@@ -55,7 +29,7 @@ if (require.main === module) {
             console.error(err);
         }
     });
-};
+}
 
 var Item = require('./models/item');
 
@@ -71,6 +45,12 @@ app.get('/items', function(req, res) {
 });
 
 app.post('/items', function(req, res) {
+    console.log(req.body.name, "post");
+    if (!req.body.name) {
+        return res.status(400).json({
+            message:'No Value Selected'
+        });
+    }
     Item.create({
         name: req.body.name
     }, function(err, item) {
@@ -83,6 +63,27 @@ app.post('/items', function(req, res) {
     });
 });
 
+app.put('/items/:id', function(req, res) {
+    console.log(req.body.name, "put");
+    if (!req.body.name) {
+        return res.status(400).json({
+            message:'No Value Selected'
+        });
+    }
+    var id = req.params.id;
+    Item.findByIdAndUpdate(id, {$set: { name: req.body.name}}, {new: true}, function(err, result) {
+        res.send(result);
+    });
+    
+});
+
+app.delete('/items/:id', function(req, res) {
+    var id = req.params.id;
+    Item.findByIdAndRemove(id, function(err, result) {
+        res.send(result);
+    });
+});
+
 app.use('*', function(req, res) {
     res.status(404).json({
         message: 'Not Found'
@@ -90,5 +91,4 @@ app.use('*', function(req, res) {
 });
 
 exports.app = app;
-exports.storage = storage;
 exports.runServer = runServer;
